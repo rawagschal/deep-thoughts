@@ -39,6 +39,11 @@ const typeDefs = gql `
         # adding _id param for ability to look up thought by _id (required)
         thought(_id: ID!): Thought 
     }
+
+    type Mutation {
+        login(email: String!, password: String!): User
+        addUser(username: String!, email: String!, password: String!): User
+    }
 `;
 
 //export typeDefs

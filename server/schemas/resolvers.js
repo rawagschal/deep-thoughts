@@ -1,7 +1,8 @@
 const { User, Thought } = require('../models')
+const { AuthenticationError } = require('apollo-server-express');
 
 const resolvers = {
-    // GET request definitions
+    // GET request functionality
     Query: {
         // get thoughts by username w/ destructured args param for username
         thoughts: async (parent, { username }) => {
@@ -25,6 +26,30 @@ const resolvers = {
             .select('-__v -password')
             .populate('friends')
             .populate('thoughts');
+        }
+    },
+    // CREATE, UPDATE, DELETE request functionality
+    Mutation: {
+        addUser: async (parent, args) => {
+            // mongoose User model creates new user in db w/ whatever is passed in as args
+            const user = await User.create(args);
+
+            return user;
+        },
+        login: async (parent, { email, password }) => {
+            const user = await User.findOne({ email });
+
+            if(!user) {
+                throw new AuthenticationError('Incorrect credentials');
+            }
+
+            const correctPw = await user.isCorrectPassword(password);
+
+            if(!correctPw) {
+                throw new AuthenticationError('Incorrect credentials')
+            }
+
+            return user;
         }
     }
 };
