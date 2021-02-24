@@ -1,5 +1,6 @@
 const { User, Thought } = require('../models')
 const { AuthenticationError } = require('apollo-server-express');
+const { signToken } = require('../utils/auth');
 
 const resolvers = {
     // GET request functionality
@@ -26,6 +27,20 @@ const resolvers = {
             .select('-__v -password')
             .populate('friends')
             .populate('thoughts');
+        },
+        // get the user that is logged in
+        me: async(parent, args, context) => {
+            // check if user is authenticated
+            if (context.user) {
+                const userData = await User.findOne({})
+                .select('-__v -password')
+                .populate('thoughts')
+                .populate('friends');
+
+                return userData;
+            }
+            // if user isn't authenticated, 
+            throw new AuthenticationError('Not logged in')
         }
     },
     // CREATE, UPDATE, DELETE request functionality
@@ -33,8 +48,10 @@ const resolvers = {
         addUser: async (parent, args) => {
             // mongoose User model creates new user in db w/ whatever is passed in as args
             const user = await User.create(args);
-
-            return user;
+            // sign a token for the user
+            const token = signToken(user);
+            
+            return { token, user } ;
         },
         login: async (parent, { email, password }) => {
             const user = await User.findOne({ email });
@@ -48,8 +65,9 @@ const resolvers = {
             if(!correctPw) {
                 throw new AuthenticationError('Incorrect credentials')
             }
-
-            return user;
+            //sign token after express auth passes
+            const token = signToken(user);
+            return { token, user };
         }
     }
 };

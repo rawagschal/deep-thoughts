@@ -22,6 +22,12 @@ const typeDefs = gql `
         thoughts: [Thought]
         friends: [User]
     }
+    
+    # auth with JWT
+    type Auth {
+        token: ID!
+        user: User
+    }
 
     type Reaction {
         _id: ID
@@ -31,6 +37,8 @@ const typeDefs = gql `
     }
 
     type Query {
+        # get the user that is logged in w/ JWT
+        me: User
         users: [User]
         # adding username param for ability to look up user by username (required)
         user(username: String!): User
@@ -41,8 +49,9 @@ const typeDefs = gql `
     }
 
     type Mutation {
-        login(email: String!, password: String!): User
-        addUser(username: String!, email: String!, password: String!): User
+        # return Auth data type which includes user and JWT
+        login(email: String!, password: String!): Auth
+        addUser(username: String!, email: String!, password: String!): Auth
     }
 `;
 
