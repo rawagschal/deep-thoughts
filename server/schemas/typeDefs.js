@@ -52,6 +52,12 @@ const typeDefs = gql `
         # return Auth data type which includes user and JWT
         login(email: String!, password: String!): Auth
         addUser(username: String!, email: String!, password: String!): Auth
+        # return Thought data type
+        addThought(thoughtText: String!): Thought
+        # reactions are tracked on the Thought level, so return Thought
+        addReaction(thoughtId: ID!, reactionBody: String!): Thought
+        # return User data type
+        addFriend(friendId: ID!): User
     }
 `;
 

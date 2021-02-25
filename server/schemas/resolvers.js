@@ -68,6 +68,55 @@ const resolvers = {
             //sign token after express auth passes
             const token = signToken(user);
             return { token, user };
+        },
+        addThought: async (parent, args, context) => {
+            // if the user is authenticated
+            if (context.user) {
+                // create a new thought by that user
+                const thought = await Thought.create({ ...args, username: context.user.username });
+                // update this instance of the User document (model) with the new thought
+                await User.findByIdAndUpdate(
+                    { _id: context.user._id },
+                    // using Mongo $push operator to update the thoughts array on the user
+                    { $push: { thoughts: thought._id } },
+                    // tells mongoDB to return updated version
+                    { new: true }
+                );
+
+                return thought;
+            }
+
+            throw new AuthenticationError('You need to be logged in to add a thought!');
+        },
+        addReaction: async (parent, { thoughtId, reactionBody }, context) => {
+            // if the user is authenticated
+            if (context.user) {
+                // update this instance of the Thought doc with a new reaction
+                const updatedThought = await Thought.findOneAndUpdate(
+                    { _id: thoughtId },
+                    // using Mongo $push operator to push new reaction to the reactions array on Thought
+                    { $push: {reactions: { reactionBody, username: context.user.username, } } },
+                    { new: true, runValidators: true }
+                );
+
+                return updatedThought;
+            }
+
+            throw new AuthenticationError('You need to be logged in to add a reaction!');
+        },
+        addFriend: async (parent, { friendId }, context) => {
+            if (context.user) {
+                const updatedUser = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    // using Mongo $addToSet so that the same friend can only be added once
+                    { $addToSet: { friends: friendId } },
+                    { new: true }
+                ).populate('friends');
+
+                return updatedUser;
+            }
+
+            throw new AuthenticationError('You need to be logged in to add a friend!');
         }
     }
 };
